@@ -50,7 +50,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Faladu\\Amplitude\\AmplitudeServiceProvider"
+                "Faladu\\Amplitude\\Providers\\LaravelAmplitudeServiceProvider"
             ],
             "aliases": {
                 "Amplitude": "Faladu\\Amplitude\\Facades\\Amplitude"
