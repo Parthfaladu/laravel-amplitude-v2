@@ -498,7 +498,7 @@ class AmplitudeService
      */
     protected function sendEvent()
     {
-        if (empty($this->event) || empty($this->apiKey)) {
+        if (empty($this->event) || empty($this->apiKey) || empty($this->event->user_id) || empty($this->event->event_type)) {
             throw new \Exception('Event or api key not set, cannot send event');
         }
         $url = empty($this->apiUrl) ? static::AMPLITUDE_API_URL : $this->apiUrl;
@@ -510,10 +510,16 @@ class AmplitudeService
             );
             return;
         }
-        $postFields = [
-            'api_key' => $this->apiKey,
-            'event' => json_encode($this->event),
-        ];
+        $postFields = '{
+            "api_key": "'. $this->apiKey .'",
+            "events": [
+                {
+                    "user_id":"'. $this->event->user_id .'",
+                    "event_type":"'. $this->event->event_type .'",
+                    "event_properties":'. json_encode($this->event->event_properties) .',
+                }
+            ]
+        }';
         curl_setopt($ch, \CURLOPT_POSTFIELDS, $postFields);
         // Always return instead of outputting response!
         curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true);

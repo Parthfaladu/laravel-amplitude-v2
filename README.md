@@ -1,82 +1,129 @@
-# This is my package laravel-amplitude-v2
+# A Laravel package to work with Amplitude version 2
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/faladu/laravel-amplitude-v2.svg?style=flat-square)](https://packagist.org/packages/faladu/laravel-amplitude-v2)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/faladu/laravel-amplitude-v2/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/faladu/laravel-amplitude-v2/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/faladu/laravel-amplitude-v2/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/faladu/laravel-amplitude-v2/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/faladu/laravel-amplitude-v2.svg?style=flat-square)](https://packagist.org/packages/faladu/laravel-amplitude-v2)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/Parthfaladu/laravel-amplitude-v2.svg?style=flat-square)](https://packagist.org/packages/Parthfaladu/laravel-amplitude-v2)
+[![Build Status](https://img.shields.io/travis/Parthfaladu/laravel-amplitude-v2/master.svg?style=flat-square)](https://travis-ci.org/Parthfaladu/laravel-amplitude-v2)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Parthfaladu/laravel-amplitude-v2/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Parthfaladu/laravel-amplitude-v2/?branch=master)
+[![Total Downloads](https://img.shields.io/packagist/dt/Parthfaladu/laravel-amplitude-v2.svg?style=flat-square)](https://packagist.org/packages/Parthfaladu/laravel-amplitude-v2)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+![](laravel-amplitude.png)
 
-## Support us
+This package will be your best friend if you need to track events for your Laravel application in Amplitude with version 2
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-amplitude-v2.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-amplitude-v2)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+This package is compatible with the 5.8 and uper version of Laravel.
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require faladu/laravel-amplitude-v2
+composer require Parthfaladu/laravel-amplitude-v2
 ```
 
-You can publish and run the migrations with:
+Do not forget to publish the config file with Artisan:
 
 ```bash
-php artisan vendor:publish --tag="laravel-amplitude-v2-migrations"
-php artisan migrate
+artisan vendor:publish
 ```
 
-You can publish the config file with:
+To be up and running, just add the Amplitude API Key of your project in the `.env` file, using `AMPLITUDE_API_KEY` as key.
 
-```bash
-php artisan vendor:publish --tag="laravel-amplitude-v2-config"
-```
-
-This is the contents of the published config file:
+If you want to use the `Amplitude` facade, remember to add the following line to your `config/app.php`, in the `aliases` item.
 
 ```php
-return [
-];
-```
+'aliases' => [
+    ...
 
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="laravel-amplitude-v2-views"
+    'Amplitude' => LaravelAmplitude\Facades\Amplitude::class
+]
 ```
 
 ## Usage
 
+Laravel Amplitude uses a simple syntax to track your product events easily.
+
+### Setting the User Id
+
+First of all, before sending anything, you will need to set the User ID.
+
 ```php
-$amplitude = new Faladu\Amplitude();
-echo $amplitude->echoPhrase('Hello, Faladu!');
+Amplitude::setUserId('user_id');
 ```
 
-## Testing
+Note: setting the user id is MANDATORY. Otherwise, you will get an error when trying to send data to Amplitude.
 
-```bash
-composer test
+### Sending Events
+
+Once the user id is set, you are ready to send events to your Amplitude project.
+
+```php
+// simple sending...
+Amplitude::sendEvent('app_opened');
+
+// sending with properties...
+Amplitude::sendEvent('subscription_paid', ['was_trial' => true]);
 ```
 
-## Changelog
+Also, you can change the user properties with the dedicated method `setUserProperties`:
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+```php
+// properties new values are set here
+Amplitude::setUserProperties([
+    'trial' => false,
+    'plan' => 'professional'
+]);
+
+// data is sent to Amplitude here
+Amplitude::sendEvent('subscription_paid', ['was_trial' => true]);
+```
+
+IMPORTANT: the properties will be sent to Amplitude at the next `sendEvent` call. Without any other call to `sendEvent`, the new user properties are not going to be saved.
+
+### Queueing Events
+
+If send a lot of events and you want to keep your performances good, you may choose events queueing instead of the simple sending you just saw.
+
+With events queueing, **you will send all your events once the request is over**, instead of making different API calls during the request lifecycle.
+
+To use it, just switch your `sendEvent` calls to `queueEvent` method.
+
+```php
+// simple sending...
+Amplitude::queueEvent('app_opened');
+
+// sending with properties...
+Amplitude::queueEvent('subscription_paid', ['was_trial' => true]);
+```
+
+Nothing more to do! When the request will be finished, Laravel Amplitude will automatically trigger the send operation of your data.
+
+However, if you want more control and you want to send your queued events in your code, you can do it manually with a call to the `sendQueuedEvents` method.
+
+```php
+// queueing an event...
+Amplitude::queueEvent('app_opened');
+
+// queueing another event...
+Amplitude::queueEvent('subscription_paid', ['was_trial' => true]);
+
+// send them!
+Amplitude::sendQueuedEvents();
+```
+
+### Changelog
+
+Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
 
 ## Contributing
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
-## Security Vulnerabilities
+### Security
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+If you discover any security related issues, please email parth.fadadu@hotmail.com instead of using the issue tracker.
 
 ## Credits
 
-- [Parth faladu](https://github.com/parthfaladu)
+- [Parth Faladu](https://github.com/parthfaladu)
 - [All Contributors](../../contributors)
 
 ## License
